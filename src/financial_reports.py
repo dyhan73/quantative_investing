@@ -103,6 +103,12 @@ def get_reports_after_201812(reports, yyyy, mm):
     cols = [re.sub('활동으로인한', '', k) for k in cols]  # 영업현금흐름 으로 정제
     cols = [re.sub('/누적', '', k) for k in cols]  # 201906/누적 => 201906 으로 정제
     reports.columns = cols
+
+    for field in reports.keys():
+        if field.endswith('율') or field in ('종목코드', 'rdate'):
+            continue
+        reports[field] = reports[field] / 1000  # 천원단위를 백만원단위로 변경
+
     return reports
 
 
@@ -173,6 +179,18 @@ if __name__ == "__main__":
 
         report_list = read_reports(f)
         print("Tabs : ", report_list.keys())
+
+        # 실적요약 탭은 제거
+        if '실적요약' in report_list.keys():
+            del(report_list['실적요약'])
+
+        # 주재무제표 또는 전체가 있으면 그것만 쓰자
+        if '주재무제표' in report_list.keys() or '전체' in report_list.keys():
+            keys = list(report_list.keys())
+            for key in keys:
+                if key not in ('주재무제표', '전체'):
+                    del(report_list[key])
+        print("after del Tabs : ", report_list.keys())
         # continue
 
         for key in report_list:
@@ -191,7 +209,7 @@ if __name__ == "__main__":
             report = replace_field_name(report)
             print(report.head())
             print(report.keys())
-            db_oper.insert_table('reports', report)
+            db_oper.upsert_table('reports', report)
             # break
 
         # break

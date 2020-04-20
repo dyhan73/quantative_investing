@@ -20,7 +20,7 @@ def insert_table(table, df):
     for idx, row in df.iterrows():
         columns = ', '.join(row.keys())
         placeholders = ', '.join('?' * len(row.values))
-        sql = 'INSERT INTO {} ({}) VALUES ({})'.format(table, columns, placeholders)
+        sql = 'INSERT OR IGNORE INTO {} ({}) VALUES ({})'.format(table, columns, placeholders)
 
         try:
             conn.execute(sql, row.values)
@@ -35,6 +35,7 @@ def insert_table(table, df):
 
 def upsert_table(table, df):
     # company 정보 DB upsert
+    # replace 라서 기존 필드값이 있었으나 df 에 없는 필드의 경우 사라짐 ㅠ.ㅠ
     conn = sqlite3.connect("./database/quantative_investing.db")
     for idx, row in df.iterrows():
         columns = ', '.join(row.keys())
