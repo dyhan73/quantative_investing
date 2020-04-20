@@ -1,0 +1,14 @@
+.idea
+.ipynb_checkpoints
+__pycache__
+~*
+*.db
+*.zip
+output
+*.hwp
+*Rank*.xls
+*Rank*.xlsx
+*Eng*.xls
+*Eng*.xlsx
+*영문*.xlsx
+속보*
