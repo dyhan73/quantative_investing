@@ -36,13 +36,20 @@ drop table if exists prices;
 create table prices (
     code text,
     sdate date,
-    start integer,
-    max integer,
-    min integer,
+    open integer,
+    high integer,
+    low integer,
     close integer,
-    volume integer,
-    shares integer, -- 주식수
+    trading_volume integer, -- 거래량
+    trading_value integer,  -- 거래대금
+    adj_close integer,
+    movement integer,  -- 대비 (전일대비)
+    movement_ratio float,  -- 등락률
+    total_shares integer, -- 주식수
     market_cap integer, -- 시가총액
+    market_ratio float, -- 시가총액비중(%)
+    foreign_shares integer,  -- 외국인 보유주식수
+    foreign_ratio float,  -- 외국인 지분율(%)
     per float, -- 시가총액 / 당기순이익
     psr float, -- 시가총액 / 매출액
     pcr float, -- 시가총액 / 영업현금흐름

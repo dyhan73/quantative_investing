@@ -31,3 +31,21 @@ def insert_table(table, df):
             pass
     conn.commit()
     conn.close()
+
+
+def upsert_table(table, df):
+    # company 정보 DB upsert
+    conn = sqlite3.connect("./database/quantative_investing.db")
+    for idx, row in df.iterrows():
+        columns = ', '.join(row.keys())
+        placeholders = ', '.join('?' * len(row.values))
+        sql = 'INSERT OR REPLACE INTO {} ({}) VALUES ({})'.format(table, columns, placeholders)
+
+        try:
+            conn.execute(sql, row.values)
+        except:
+            print(sys.exc_info())
+            pass
+    conn.commit()
+    conn.close()
+

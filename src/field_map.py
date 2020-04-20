@@ -31,3 +31,20 @@ dic_companies = {
     '산업코드': 'ind_code',
     '산업명': 'industry'
 }
+
+dic_prices = {
+    '종목코드': 'code',
+    '대비': 'movement',
+    '등락률': 'movement_ratio',
+    '거래량': 'trading_volume',
+    '거래대금': 'trading_value',
+    '시가': 'open',
+    '고가': 'high',
+    '저가': 'low',
+    '현재가': 'close',
+    '시가총액': 'market_cap',
+    '시가총액비중(%)': 'market_ratio',
+    '상장주식수': 'total_shares',
+    '외국인 보유주식수': 'foreign_shares',
+    '외국인 지분율(%)': 'foreign_ratio'
+}
