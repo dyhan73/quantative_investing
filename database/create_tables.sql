@@ -1,7 +1,7 @@
 drop table if exists reports;
 create table reports (
-    code text,
-    rdate date,
+    code text not null,
+    rdate date not null,
     total_assets integer,   -- 자산총계
     current_assets integer, -- 유동자산
     total_liabilities integer, -- 부채총계
@@ -14,6 +14,12 @@ create table reports (
     cash_flows_from_operatings integer, -- 영업현금흐름
     current_ratio float, -- 유동비율
     debt_to_equity_ratio float, -- 부채비율
+    q1_net_sales integer,
+    q1_gross_profit integer,
+    q1_operating_income integer,
+    q4_net_sales integer,
+    q4_gross_profit integer,
+    q4_operating_income integer,
     roa float, -- 당기순이익 / 자산총계
     gpa float, -- 매출총이익 / 자산총계
     reg_date date,
@@ -23,7 +29,7 @@ create table reports (
 
 drop table if exists companies;
 create table companies (
-    code text primary key,
+    code text not null primary key,
     market text,
     company text not null,
     ind_code text, -- 산업코드
@@ -34,8 +40,8 @@ create table companies (
 
 drop table if exists prices;
 create table prices (
-    code text,
-    sdate date,
+    code text not null,
+    sdate date not null,
     open integer,
     high integer,
     low integer,

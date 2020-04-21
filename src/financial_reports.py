@@ -12,7 +12,6 @@ import db_oper
 
 
 def get_yyyy_mm(path):
-    # regex = re.compile(r'(....)년(..)월확정실적')
     regex = re.compile(r'/(\d\d\d\d).*(\d\d).*/')
     m = regex.search(path)
     return m[1], m[2]
@@ -62,7 +61,7 @@ def get_file_list(root):
         for f in os.listdir(path):
             full_file_path = os.path.join(path, f)
 
-            if os.path.isdir(full_file_path):  # and f.startswith('2009년12월'):
+            if os.path.isdir(full_file_path):  # and f.startswith('2012') and '09' in f:
                 dirs.append(full_file_path)
             elif os.path.isfile(full_file_path) \
                     and f.startswith('20') \
@@ -92,6 +91,7 @@ def get_reports_after_201812(reports, yyyy, mm):
             '당기순이익', '영업활동으로인한현금흐름', '부채비율')
     reports = reports[[k for k in reports.keys() if k.startswith(cols) and '비교' not in k and '3개월' not in k]]
     reports = reports[[k for k in reports.keys() if '-' not in k or '%s%s' % (yyyy, mm) in k]]
+    reports['종목코드'] = reports['종목코드'].str.strip()
     reports['종목코드'] = reports['종목코드'].str[1:]
 
     reports.insert(1, 'rdate', get_yyyymmdd(yyyy, mm))
@@ -118,6 +118,7 @@ def get_reports_before_201809(reports, yyyy, mm):
     cols = [k for k in reports.keys() if '(' not in k]
     cols = cols + [k for k in reports.keys() if '%s%s' % (yyyy, mm) in k]
     reports = reports[cols]
+    reports['코드'] = reports['코드'].str.strip()
     reports['코드'] = reports['코드'].str[1:]
 
     reports.insert(1, 'rdate', get_yyyymmdd(yyyy, mm))
@@ -143,12 +144,13 @@ def compare_fields(file_name):
     print("%s, %s" % (file_name, tabs.keys()))
 
 
-def get_companies(report, yyyy, mm):
+def get_companies(report):
     columns = [key for key in report.keys() if key in dic_companies]
     companies = report[columns]
     columns = [dic_companies[key] for key in columns]
     companies.columns = columns
 
+    companies.loc[:, 'code'] = companies['code'].str.strip()
     companies.loc[:, 'code'] = companies['code'].str[1:]
 
     return companies
@@ -168,8 +170,6 @@ def replace_field_name(df):
 
 
 if __name__ == "__main__":
-    # reports_path = os.path.join(os.getcwd(), 'data', 'financial_reports')
-    # reports_path = os.path.join('..', 'data', 'financial_reports')
     reports_path = os.path.join('data', 'financial_reports')
     files = get_file_list(reports_path)
 
@@ -200,7 +200,7 @@ if __name__ == "__main__":
             print(df.keys())
             df = remove_useless_companies(df)
 
-            company = get_companies(df, yyyy, mm)
+            company = get_companies(df)
             print(company.head())
             print(company.keys())
             db_oper.insert_table('companies', company)
