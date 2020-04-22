@@ -16,10 +16,10 @@ create table reports (
     debt_to_equity_ratio float, -- 부채비율
     q1_net_sales integer,
     q1_gross_profit integer,
-    q1_operating_income integer,
+    q1_ongoing_operating_income integer,
     q4_net_sales integer,
     q4_gross_profit integer,
-    q4_operating_income integer,
+    q4_ongoing_operating_income integer,
     roa float, -- 당기순이익 / 자산총계
     gpa float, -- 매출총이익 / 자산총계
     reg_date date,
@@ -64,3 +64,11 @@ create table prices (
     upd_date date,
     primary key (code, sdate)
 );
+
+
+-- alter table reports add q1_net_sales integer;
+-- alter table reports add q1_gross_profit integer;
+-- alter table reports add q1_ongoing_operating_income integer;
+-- alter table reports add q4_net_sales integer;
+-- alter table reports add q4_gross_profit integer;
+-- alter table reports add q4_ongoing_operating_income integer;

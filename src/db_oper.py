@@ -29,6 +29,20 @@ def select_table(table, where='1=1'):
         conn.close()
 
 
+def select_by_query(sql):
+    conn = sqlite3.connect("./database/quantative_investing.db")
+    cursor = conn.cursor()
+    try:
+        cursor.execute(sql)
+        names = [x[0] for x in cursor.description]
+        rows = cursor.fetchall()
+        return pd.DataFrame(rows, columns=names)
+    finally:
+        if cursor is not None:
+            cursor.close()
+        conn.close()
+
+
 def insert_table(table, df):
     # company 정보 DB Insert
     conn = sqlite3.connect("./database/quantative_investing.db")
@@ -48,10 +62,28 @@ def insert_table(table, df):
     conn.close()
 
 
-def update_table(table, df, keys):
+def update_table(table, df, where_keys):
     # 업데이트 항목 추출 : df.keys() - keys
     # 조건 항목 : keys
-    pass
+    update_keys = [k for k in df.keys() if k not in where_keys]
+
+    conn = sqlite3.connect("./database/quantative_investing.db")
+    for idx, row in df.iterrows():
+        update_str_list = []
+        where_str_list = []
+        for k in row.keys():
+            if k in update_keys:
+                update_str_list.append("%s=%s" % (k, row[k]))
+            elif k in where_keys:
+                where_str_list.append("%s='%s'" % (k, row[k]))
+        sql = 'UPDATE {} SET {} WHERE {}'.format(table, ', '.join(update_str_list), ' AND '.join(where_str_list))
+        try:
+            conn.execute(sql)
+        except:
+            print(sys.exc_info())
+            pass
+    conn.commit()
+    conn.close()
 
 
 def upsert_table(table, df):
