@@ -4,7 +4,8 @@ import pandas as pd
 
 import db_oper
 
-if __name__ == "__main__":
+
+def do_main_proc_to_update_stock_prices_github():
     price_root = '../Korea_Stocks/Korea_Stocks_Full'
     files = os.listdir(price_root)
     files.sort()
@@ -26,3 +27,8 @@ if __name__ == "__main__":
 
         db_oper.insert_table('prices', prices)
         # break
+    return
+
+
+if __name__ == "__main__":
+    do_main_proc_to_update_stock_prices_github()

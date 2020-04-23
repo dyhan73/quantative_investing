@@ -9,19 +9,13 @@ import pandas as pd
 
 from field_map import dic_companies, dic_reports
 import db_oper
+from utils import get_yyyymmdd
 
 
 def get_yyyy_mm(path):
     regex = re.compile(r'/(\d\d\d\d).*(\d\d).*/')
     m = regex.search(path)
     return m[1], m[2]
-
-
-def get_yyyymmdd(yyyy, mm):
-    dd = '31'
-    if mm in ('06', '09'):
-        dd = '30'
-    return '%s%s%s' % (yyyy, mm, dd)
 
 
 def read_reports(file_path=None, ):
@@ -46,6 +40,18 @@ def read_reports(file_path=None, ):
             columns = [t.replace('\n', '') for t in columns]
             columns = [t.replace(' ', '') for t in columns]
             report.columns = columns
+
+    # 실적요약 탭은 제거
+    if '실적요약' in report_list.keys():
+        del(report_list['실적요약'])
+
+    # 주재무제표 또는 전체가 있으면 그것만 쓰자
+    if '주재무제표' in report_list.keys() or '전체' in report_list.keys():
+        keys = list(report_list.keys())
+        for key in keys:
+            if key not in ('주재무제표', '전체'):
+                del(report_list[key])
+    # print("after del Tabs : ", report_list.keys())
 
     return report_list
 
@@ -142,6 +148,7 @@ def remove_useless_companies(df):
 def compare_fields(file_name):
     tabs = read_reports(file_name)
     print("%s, %s" % (file_name, tabs.keys()))
+    return
 
 
 def get_companies(report):
@@ -162,14 +169,14 @@ def replace_field_name(df):
     dics.update(dic_reports)
     keys = df.keys()
     keys2 = [dics[k] if k in dics else k for k in keys]
-    print(keys2)
+    # print(keys2)
     df.columns = keys2
     df = df[[k for k in df.keys() if k in dics.values()]]
-    df.head()
+    # df.head()
     return df
 
 
-if __name__ == "__main__":
+def do_main_proc_for_financial_reports():
     reports_path = os.path.join('data', 'financial_reports')
     files = get_file_list(reports_path)
 
@@ -180,17 +187,7 @@ if __name__ == "__main__":
         report_list = read_reports(f)
         print("Tabs : ", report_list.keys())
 
-        # 실적요약 탭은 제거
-        if '실적요약' in report_list.keys():
-            del(report_list['실적요약'])
 
-        # 주재무제표 또는 전체가 있으면 그것만 쓰자
-        if '주재무제표' in report_list.keys() or '전체' in report_list.keys():
-            keys = list(report_list.keys())
-            for key in keys:
-                if key not in ('주재무제표', '전체'):
-                    del(report_list[key])
-        print("after del Tabs : ", report_list.keys())
         # continue
 
         for key in report_list:
@@ -213,3 +210,8 @@ if __name__ == "__main__":
             # break
 
         # break
+    return
+
+
+if __name__ == "__main__":
+    do_main_proc_for_financial_reports()

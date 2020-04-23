@@ -6,7 +6,7 @@ from field_map import dic_prices
 import db_oper
 
 
-if __name__ == "__main__":
+def do_main_proc_to_update_stock_prices_krx():
     price_root = 'data/stock_prices'
     files = os.listdir(price_root)
     files.sort()
@@ -41,5 +41,10 @@ if __name__ == "__main__":
         db_oper.upsert_table('prices', prices)
 
         # break
+    return
+
+
+if __name__ == "__main__":
+    do_main_proc_to_update_stock_prices_krx()
 
 

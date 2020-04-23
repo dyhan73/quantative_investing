@@ -43,6 +43,17 @@ def select_by_query(sql):
         conn.close()
 
 
+def execute_by_query(sql):
+    conn = sqlite3.connect("./database/quantative_investing.db")
+    try:
+        conn.execute(sql)
+    except:
+        print(sys.exc_info())
+        pass
+    conn.commit()
+    conn.close()
+
+
 def insert_table(table, df):
     # company 정보 DB Insert
     conn = sqlite3.connect("./database/quantative_investing.db")
@@ -77,11 +88,13 @@ def update_table(table, df, where_keys):
             elif k in where_keys:
                 where_str_list.append("%s='%s'" % (k, row[k]))
         sql = 'UPDATE {} SET {} WHERE {}'.format(table, ', '.join(update_str_list), ' AND '.join(where_str_list))
+        print(sql)
         try:
             conn.execute(sql)
         except:
             print(sys.exc_info())
             pass
+        break
     conn.commit()
     conn.close()
 

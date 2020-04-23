@@ -20,6 +20,8 @@ create table reports (
     q4_net_sales integer,
     q4_gross_profit integer,
     q4_ongoing_operating_income integer,
+    stock_shares integer, -- 주식수
+
     roa float, -- 당기순이익 / 자산총계
     gpa float, -- 매출총이익 / 자산총계
     reg_date date,
@@ -56,6 +58,7 @@ create table prices (
     market_ratio float, -- 시가총액비중(%)
     foreign_shares integer,  -- 외국인 보유주식수
     foreign_ratio float,  -- 외국인 지분율(%)
+    calc_market_cap integer, -- 가격 * 보고서주식수로 계산된 시가총액
     per float, -- 시가총액 / 당기순이익
     psr float, -- 시가총액 / 매출액
     pcr float, -- 시가총액 / 영업현금흐름
@@ -64,6 +67,8 @@ create table prices (
     upd_date date,
     primary key (code, sdate)
 );
+drop index ix_prices_date;
+create index ix_prices_date on prices(sdate);
 
 
 -- alter table reports add q1_net_sales integer;
@@ -72,3 +77,5 @@ create table prices (
 -- alter table reports add q4_net_sales integer;
 -- alter table reports add q4_gross_profit integer;
 -- alter table reports add q4_ongoing_operating_income integer;
+-- alter table reports add stock_shares integer;
+-- alter table prices add calc_market_cap integer;

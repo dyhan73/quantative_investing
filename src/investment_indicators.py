@@ -1,13 +1,11 @@
-from datetime import datetime, timedelta
-import calendar
-
 import db_oper
+from utils import get_latest_meaningful_report_day, get_prev_report_day, get_report_days_of_year
 
 """
-joined['PER'] = joined['시가총액'] / joined['당기순이익'] / 1000
-joined['PSR'] = joined['시가총액'] / joined['매출액'] / 1000
-joined['PCR'] = joined['시가총액'] / joined['영업현금흐름'] / 1000
-joined['PBR'] = joined['시가총액'] / joined['자본총계'] / 1000
+joined['PER'] = joined['시가총액'] / joined['당기순이익']
+joined['PSR'] = joined['시가총액'] / joined['매출액']
+joined['PCR'] = joined['시가총액'] / joined['영업현금흐름']
+joined['PBR'] = joined['시가총액'] / joined['자본총계']
 joined['ROA'] = joined['당기순이익'] / joined['자산총계']
 joined['GPA'] = joined['매출총이익'] / joined['자산총계']
 """
@@ -57,15 +55,22 @@ def calc_q1_values(date):
     return result
 
 
-def proc_q1_values():
+def proc_q1_values(rdate):
+    q1_values = calc_q1_values(rdate)
+    if q1_values is None or len(q1_values) <= 0:
+        return None
+    db_oper.update_table('reports', q1_values, ['code', 'rdate'])
+    return len(q1_values)
+
+
+def proc_all_q1_values():
     report_date = '20191231'
 
     while True:
-        q1_values = calc_q1_values(report_date)
-        if q1_values is None or len(q1_values) <= 0:
+        if proc_q1_values(report_date) is None:
             break
-        db_oper.update_table('reports', q1_values, ['code', 'rdate'])
         report_date = get_prev_report_day(report_date)
+    return
 
 
 # 지난 4분기 합계 데이터 산출
@@ -105,54 +110,122 @@ def calc_q4_values(date):
     return result
 
 
-def proc_q4_values():
+def proc_q4_values(rdate):
+    q4_accums = calc_q4_values(rdate)
+    if q4_accums is None or len(q4_accums) <= 0:
+        return None
+    db_oper.update_table('reports', q4_accums, ['code', 'rdate'])
+    return len(q4_accums)
+
+
+def proc_all_q4_values():
     report_date = '20191231'
 
     while True:
-        q4_accums = calc_q4_values(report_date)
-        if q4_accums is None or len(q4_accums) <= 0:
+        if proc_q4_values(report_date) is None:
             break
-        db_oper.update_table('reports', q4_accums, ['code', 'rdate'])
         report_date = get_prev_report_day(report_date)
+    return
 
 
-def get_prev_report_day(report_date):
-    dt = datetime.strptime(report_date, '%Y%m%d')
-    prev_dt = dt - timedelta(days=95)
-    last_day = calendar.monthrange(prev_dt.year, prev_dt.month)[1]
-    prev_dt = prev_dt.replace(day=last_day)
-    return prev_dt.strftime('%Y%m%d')
+# joined['ROA'] = joined['당기순이익'] / joined['자산총계']
+# joined['GPA'] = joined['매출총이익'] / joined['자산총계']
+
+def proc_roa_gpa(rdate=None):
+    sql = "update reports set roa=100.0*q4_ongoing_operating_income/total_assets, gpa=100.0*q4_gross_profit/total_assets"
+    if rdate is not None:
+        sql = sql + 'and rdate=%s' % rdate
+    db_oper.execute_by_query(sql)
+    return
 
 
-def get_report_days_of_year(report_date):
-    result = [report_date]
-    dt = report_date
-    for i in range(3):
-        dt = get_prev_report_day(dt)
-        result.append(dt)
-    return result
+def do_all_sdate_proc_pxrs():
+    date_df = db_oper.select_by_query("select distinct(sdate) as sdate from prices order by sdate desc")
+    for idx, date in date_df.iterrows():
+        # print(date)
+        # print(date.sdate)
+        proc_per_psr_pcr_pbr(str(date.sdate))
+    return
 
 
-def test_get_day_functions():
-    rdate = '20191231'
-    dt_rdate = datetime.strptime(rdate, '%Y%m%d')
-    print(dt_rdate.strftime('%Y-%m-%d'))
+def proc_per_psr_pcr_pbr(date):
+    """
+    per = 시가총액 / 당기순이익
+    psr = 시가총액 / 매출액
+    pcr = 시가총액 / 영업현금흐름
+    pbr = 시가총액 / 자본총계
+    per = reports.stock_shares * prices.close / reports.q4_ongoing_operating_income
+    psr = reports.stock_shares * prices.close / reports.q4_net_sales
+    pcr = reports.stock_shares * prices.close / reports.cash_flows_from_operatings
+    pbr = reports.stock_shares * prices.close / reports.total_equity
+    :param date: prices.sdate (yyyymmdd)
+    :return:
+    """
+    rep_date = get_latest_meaningful_report_day(date)
+    print("proc_PxRs : ", date, rep_date)
+    sql = """
+        select p.code, p.sdate,
+               r.stock_shares * p.close as calc_market_cap,
+               r.stock_shares * p.close / r.q4_ongoing_operating_income / 1000000.0 as per,
+               r.stock_shares * p.close / r.q4_net_sales / 1000000.0 as psr,
+               r.stock_shares * p.close / r.cash_flows_from_operatings / 1000000.0 as pcr,
+               r.stock_shares * p.close / r.total_equity / 1000000.0 as pbr
+        from prices p
+        join reports r on p.code = r.code and r.rdate = '%s'
+        where p.sdate = '%s'
+        order by p.code
+    """ % (rep_date, date)
 
-    rdate = '20190331'
-    dt_rdate = datetime.strptime(rdate, '%Y%m%d')
-    print(dt_rdate.strftime('%Y%m%d'))
+    df = db_oper.select_by_query(sql)
+    print(df.head())
+    if len(df) > 0:
+        db_oper.update_table('prices', df, ['code', 'sdate'])
 
-    dt_rdate2 = dt_rdate - timedelta(days=95)
-    print(dt_rdate2)
+    # 음수인 indicator 는 null 처리
+    # db_oper.execute_by_query("update prices set per=null where per is not null and per <= 0 and sdate='%s'" % date)
+    # db_oper.execute_by_query("update prices set psr=null where per is not null and psr <= 0 and sdate='%s'" % date)
+    # db_oper.execute_by_query("update prices set pcr=null where per is not null and pcr <= 0 and sdate='%s'" % date)
+    # db_oper.execute_by_query("update prices set pbr=null where per is not null and pbr <= 0 and sdate='%s'" % date)
+    return
 
-    last_day = calendar.monthrange(dt_rdate2.year, dt_rdate2.month)[1]
-    dt_rdate3 = dt_rdate2.replace(day=last_day)
-    print(dt_rdate3)
 
-    print(get_prev_report_day('20191231'))
-    print(get_report_days_of_year('20191231'))
+def update_stock_shares():
+    """
+    분기 마지막 거래일의 주식수 데이터 (prices 테이블) 를 보고서 (reports 테이블) 로 복사하기
+    :return:
+    """
+    sql = """
+        with
+        final_day_of_quarter as (
+            select substr(sdate, 1, 6) as yyyymm, max(sdate) as fddate
+            from prices
+            where total_shares is not null and substr(sdate, 5, 2) in ('03', '06', '09', '12')
+            group by substr(sdate, 1, 6)
+        )
+        select r.code, r.rdate, p.total_shares as stock_shares
+        from reports r
+        join companies c on r.code = c.code
+        join final_day_of_quarter fd on substr(r.rdate, 1, 6) = fd.yyyymm
+        join prices p on r.code = p.code and sdate = fd.fddate
+    """
+    df = db_oper.select_by_query(sql)
+    if len(df) > 0:
+        db_oper.update_table('reports', df, ['code', 'rdate'])
+    return
+
+
+def do_main_proc_to_update_investment_indicators():
+    proc_all_q1_values()
+    proc_all_q4_values()
+    proc_roa_gpa()
+    update_stock_shares()
+    do_all_sdate_proc_pxrs()
 
 
 if __name__ == "__main__":
     # proc_q1_values()
-    proc_q4_values()
+    # proc_all_q4_values()
+    # proc_roa_gpa()
+    # update_stock_shares()
+    proc_per_psr_pcr_pbr('20080303')
+    # do_all_sdate_proc_pxrs()
