@@ -67,7 +67,7 @@ create table prices (
     upd_date date,
     primary key (code, sdate)
 );
-drop index ix_prices_date;
+-- drop index ix_prices_date;
 create index ix_prices_date on prices(sdate);
 
 

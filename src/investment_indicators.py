@@ -134,7 +134,7 @@ def proc_all_q4_values():
 def proc_roa_gpa(rdate=None):
     sql = "update reports set roa=100.0*q4_ongoing_operating_income/total_assets, gpa=100.0*q4_gross_profit/total_assets"
     if rdate is not None:
-        sql = sql + 'and rdate=%s' % rdate
+        sql = sql + "and rdate='%s'" % rdate
     db_oper.execute_by_query(sql)
     return
 
@@ -182,10 +182,10 @@ def proc_per_psr_pcr_pbr(date):
         db_oper.update_table('prices', df, ['code', 'sdate'])
 
     # 음수인 indicator 는 null 처리
-    # db_oper.execute_by_query("update prices set per=null where per is not null and per <= 0 and sdate='%s'" % date)
-    # db_oper.execute_by_query("update prices set psr=null where per is not null and psr <= 0 and sdate='%s'" % date)
-    # db_oper.execute_by_query("update prices set pcr=null where per is not null and pcr <= 0 and sdate='%s'" % date)
-    # db_oper.execute_by_query("update prices set pbr=null where per is not null and pbr <= 0 and sdate='%s'" % date)
+    db_oper.execute_by_query("update prices set per=null where per is not null and per <= 0 and sdate='%s'" % date)
+    db_oper.execute_by_query("update prices set psr=null where per is not null and psr <= 0 and sdate='%s'" % date)
+    db_oper.execute_by_query("update prices set pcr=null where per is not null and pcr <= 0 and sdate='%s'" % date)
+    db_oper.execute_by_query("update prices set pbr=null where per is not null and pbr <= 0 and sdate='%s'" % date)
     return
 
 
@@ -227,5 +227,5 @@ if __name__ == "__main__":
     # proc_all_q4_values()
     # proc_roa_gpa()
     # update_stock_shares()
-    proc_per_psr_pcr_pbr('20080303')
-    # do_all_sdate_proc_pxrs()
+    # proc_per_psr_pcr_pbr('20080303')
+    do_all_sdate_proc_pxrs()

@@ -88,13 +88,15 @@ def update_table(table, df, where_keys):
             elif k in where_keys:
                 where_str_list.append("%s='%s'" % (k, row[k]))
         sql = 'UPDATE {} SET {} WHERE {}'.format(table, ', '.join(update_str_list), ' AND '.join(where_str_list))
-        print(sql)
+        # print(sql)
+        sql = sql.replace('=nan', '=null')
+        sql = sql.replace('=None', '=null')
+        # print(sql)
         try:
             conn.execute(sql)
         except:
             print(sys.exc_info())
             pass
-        break
     conn.commit()
     conn.close()
 

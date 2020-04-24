@@ -11,3 +11,4 @@ if __name__ == "__main__":
     step03.do_main_proc_to_update_stock_prices_github()
     step04.do_main_proc_to_update_stock_prices_krx()
     step05.do_main_proc_to_update_investment_indicators()
+    print('Done')
