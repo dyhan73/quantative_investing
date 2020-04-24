@@ -67,7 +67,7 @@ def insert_indicators_to_db(df, fv_dic):
         # break
 
 
-if __name__ == "__main__":
+def do_main_proc_to_update_economic_indicators():
     files = utils.get_file_list('data/economic_indicators')
     for f in files:
         print('File name : ' + f)
@@ -79,5 +79,8 @@ if __name__ == "__main__":
         df = pd.read_excel(f, header=[2])
         df = refine_column_footer(df)
         insert_indicators_to_db(df, fv_dic)
-
         # break
+
+
+if __name__ == "__main__":
+    do_main_proc_to_update_economic_indicators()
