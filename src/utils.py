@@ -1,5 +1,25 @@
+import os
 import calendar
 from datetime import datetime, timedelta
+
+
+def get_file_list(root):
+    dirs = [root]
+    files = []
+
+    while len(dirs) > 0:
+        path = dirs.pop(0)
+        # print(path)
+
+        for f in os.listdir(path):
+            full_file_path = os.path.join(path, f)
+
+            if os.path.isdir(full_file_path):
+                dirs.append(full_file_path)
+            elif os.path.isfile(full_file_path):
+                files.append(full_file_path)
+    files.sort(reverse=True)
+    return files
 
 
 def get_yyyymmdd(yyyy, mm):

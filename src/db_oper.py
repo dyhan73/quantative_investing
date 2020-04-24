@@ -73,6 +73,23 @@ def insert_table(table, df):
     conn.close()
 
 
+def insert_dict(table, rdict):
+    conn = sqlite3.connect("./database/quantative_investing.db")
+    columns = ', '.join(rdict.keys())
+    placeholders = ':'+', :'.join(rdict.keys())
+    sql = 'INSERT OR IGNORE INTO {} ({}) VALUES ({})'.format(table, columns, placeholders)
+    # print(sql)
+    try:
+        conn.execute(sql, rdict)
+    except sqlite3.IntegrityError:
+        pass  # 이미 인서트되어 발생하는 오류 무시
+    except:
+        print(sys.exc_info())
+        pass
+    conn.commit()
+    conn.close()
+
+
 def update_table(table, df, where_keys):
     # 업데이트 항목 추출 : df.keys() - keys
     # 조건 항목 : keys

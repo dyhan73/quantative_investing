@@ -70,6 +70,18 @@ create table prices (
 -- drop index ix_prices_date;
 create index ix_prices_date on prices(sdate);
 
+drop table if exists indicators;
+create table indicators (
+    id integer not null primary key autoincrement,
+    category text not null,
+    indicator text not null,
+    term text not null,
+    unit text,
+    year integer not null,
+    qmm integer,
+    value float
+)
+
 
 -- alter table reports add q1_net_sales integer;
 -- alter table reports add q1_gross_profit integer;
