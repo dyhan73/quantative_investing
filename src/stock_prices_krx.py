@@ -1,20 +1,20 @@
 import os
 import pandas as pd
-import numpy as np
 
 from field_map import dic_prices
 import db_oper
 
 
 def do_main_proc_to_update_stock_prices_krx():
-    price_root = 'data/stock_prices'
+    price_root = os.path.join('data', 'stock_prices')
     files = os.listdir(price_root)
     files.sort()
     print(len(files))
     print(files[:10])
 
     for f in files:
-        prices = pd.read_csv('%s/%s' % (price_root, f), dtype={'종목코드': str})
+        # prices = pd.read_csv('%s/%s' % (price_root, f), dtype={'종목코드': str})
+        prices = pd.read_csv(os.path.join(price_root, f), dtype={'종목코드': str})
         # print(prices.head())
         # print(prices[['종목코드', '시가총액']].head())
 

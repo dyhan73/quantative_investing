@@ -6,7 +6,7 @@ import db_oper
 
 
 def do_main_proc_to_update_stock_prices_github():
-    price_root = '../Korea_Stocks/Korea_Stocks_Full'
+    price_root = os.path.join('..', 'Korea_Stocks', 'Korea_Stocks_Full')
     files = os.listdir(price_root)
     files.sort()
     print(len(files))
@@ -16,7 +16,8 @@ def do_main_proc_to_update_stock_prices_github():
             continue
         code = f.replace('.csv', '')
         print(code, f)
-        prices = pd.read_csv('%s/%s' % (price_root, f))
+        # prices = pd.read_csv('%s/%s' % (price_root, f))
+        prices = pd.read_csv(os.path.join(price_root, f))
         prices.insert(0, 'code', code)
         # prices.columns = [key.lower() for key in prices.keys()]
         prices.columns = ['code', 'sdate', 'open', 'high', 'low', 'close', 'trading_volume', 'adj_close']

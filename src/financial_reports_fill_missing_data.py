@@ -7,7 +7,7 @@
 import os
 import re
 
-import pandas as pd
+# import pandas as pd
 
 import db_oper
 import financial_reports as fr
@@ -24,10 +24,10 @@ def get_rdate_list():
 
 
 def do_main_proc_for_financial_reports_fill_missing_data():
-    pd.set_option('display.width', None)
-    pd.set_option('display.max_rows', None)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.max_colwidth', -1)
+    # pd.set_option('display.width', None)
+    # pd.set_option('display.max_rows', None)
+    # pd.set_option('display.max_columns', None)
+    # pd.set_option('display.max_colwidth', -1)
 
     # 파일 목록 읽어둠
     reports_path = os.path.join('data', 'financial_reports')
@@ -58,7 +58,8 @@ def do_main_proc_for_financial_reports_fill_missing_data():
             yyyy = rd[:4]
             mm = rd[4:6]
             # print(rd, yyyy, mm)
-            fq4 = [f for f in files if re.search('reports/%s.*%s.*/' % (yyyy, mm), f)]
+            # fq4 = [f for f in files if re.search('reports/%s.*%s.*/' % (yyyy, mm), f)]
+            fq4 = [f for f in files if re.search('%s.*%s.*' % (yyyy, mm), os.path.split(os.path.dirname(f))[1])]
 
             # 보고서 엑셀파일을 돌면서
             for f_report in fq4:

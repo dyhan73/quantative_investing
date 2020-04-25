@@ -13,8 +13,10 @@ from utils import get_yyyymmdd
 
 
 def get_yyyy_mm(path):
-    regex = re.compile(r'/(\d\d\d\d).*(\d\d).*/')
-    m = regex.search(path)
+    regex = re.compile(r'(\d\d\d\d).*(\d\d).*')
+    f_dir = os.path.dirname(path)  # 파일이 있는 디렉터리 구하고
+    f_dir = os.path.split(f_dir)[1]  # 최 하단 디렉터리 이름만 가져와서
+    m = regex.search(f_dir)
     return m[1], m[2]
 
 
@@ -186,8 +188,6 @@ def do_main_proc_for_financial_reports():
 
         report_list = read_reports(f)
         print("Tabs : ", report_list.keys())
-
-
         # continue
 
         for key in report_list:
