@@ -6,7 +6,6 @@ __pycache__
 *.db
 *.db-journal
 *.zip
-output
 *.hwp
 *Rank*.xls
 *Rank*.xlsx
