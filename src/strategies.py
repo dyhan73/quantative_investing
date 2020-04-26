@@ -10,7 +10,7 @@ import db_oper
 
 def get_target_date(start_date, days=365):
     dt_date = datetime.strptime(start_date, '%Y%m%d')
-    dt_target = dt_date + timedelta(days=365)
+    dt_target = dt_date + timedelta(days=days)
     return dt_target.strftime('%Y%m%d')
 
 
@@ -43,7 +43,7 @@ def get_plus_per_by_date(date):
         from reports where rdate = (select rdate from rep_date)
     ),
     candidates as (
-        select p.code, c.company, p.sdate, p.close, p.calc_market_cap, p.per, p.psr, p.pcr, p.pbr, r.roa, r.gpa, r.debt_to_equity_ratio
+        select p.code, c.company, p.sdate, max(p.open, p.high, p.low, p.close, p.adj_close) as price, p.calc_market_cap, p.per, p.psr, p.pcr, p.pbr, r.roa, r.gpa, r.debt_to_equity_ratio
         from col_prices p
         join reps r on p.code = r.code
         join companies c on p.code = c.code
@@ -101,7 +101,7 @@ def get_earnings_of_date(df, date, seed_money):
             having count(*) > 1000
         )
         
-        select code, sdate, close
+        select code, sdate, max(open, high, low, close, adj_close) as price
         from prices
         where sdate = (select sdate from price_date)
             and code in ('%s')
@@ -111,10 +111,10 @@ def get_earnings_of_date(df, date, seed_money):
 
     sval_rslt = df.merge(sval_next, how='left', on='code', suffixes=['', '_1'])
 
-    sval_rslt = sval_rslt[['code', 'company', 'close', 'close_1']]
-    sval_rslt['stock_cnt'] = seed_money / len(sval_rslt) / sval_rslt['close']
-    sval_rslt['buy'] = sval_rslt['stock_cnt'] * sval_rslt['close']
-    sval_rslt['sell'] = sval_rslt['stock_cnt'] * sval_rslt['close_1']
+    sval_rslt = sval_rslt[['code', 'company', 'price', 'price_1']]
+    sval_rslt['stock_cnt'] = seed_money / len(sval_rslt) / sval_rslt['price']
+    sval_rslt['buy'] = sval_rslt['stock_cnt'] * sval_rslt['price']
+    sval_rslt['sell'] = sval_rslt['stock_cnt'] * sval_rslt['price_1']
     sval_rslt['gain'] = sval_rslt['sell'] - sval_rslt['buy']
     return sval_rslt
 
