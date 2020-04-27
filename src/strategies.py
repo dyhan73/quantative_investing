@@ -43,7 +43,7 @@ def get_plus_per_by_date(date):
         from reports where rdate = (select rdate from rep_date)
     ),
     candidates as (
-        select p.code, c.company, p.sdate, max(p.open, p.high, p.low, p.close, p.adj_close) as price, p.calc_market_cap, p.per, p.psr, p.pcr, p.pbr, r.roa, r.gpa, r.debt_to_equity_ratio
+        select p.code, c.company, p.sdate, max(p.open, p.high, p.low, p.close, ifnull(p.adj_close, 0)) as price, p.calc_market_cap, p.per, p.psr, p.pcr, p.pbr, r.roa, r.gpa, r.debt_to_equity_ratio
         from col_prices p
         join reps r on p.code = r.code
         join companies c on p.code = c.code
@@ -101,7 +101,7 @@ def get_earnings_of_date(df, date, seed_money):
             having count(*) > 1000
         )
         
-        select code, sdate, max(open, high, low, close, adj_close) as price
+        select code, sdate, max(open, high, low, close, ifnull(adj_close, 0)) as price
         from prices
         where sdate = (select sdate from price_date)
             and code in ('%s')
