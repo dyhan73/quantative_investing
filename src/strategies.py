@@ -1,4 +1,6 @@
 import os
+import sys
+
 from datetime import datetime, timedelta
 import calendar
 
@@ -14,7 +16,7 @@ def get_target_date(start_date, days=365):
     return dt_target.strftime('%Y%m%d')
 
 
-def get_plus_per_by_date(date):
+def get_plus_per_by_date(date, lowest_market_cap_ratio=0.2):
     # 유의미한 투자지표를 가진 종목 조회
     sql = """
     with
@@ -22,6 +24,8 @@ def get_plus_per_by_date(date):
         select min(sdate) as sdate
         from prices
         where sdate >= %s
+        group by sdate
+        having count(*) > 1000
     ),
     cnt as (
         select count(*) as cnt from prices where sdate = (select sdate from price_date)
@@ -30,7 +34,7 @@ def get_plus_per_by_date(date):
         select * from prices
         where sdate = (select sdate from price_date)
         order by calc_market_cap
-        limit cast((select cnt from cnt) * 0.2 as int)
+        limit cast((select cnt from cnt) * %f as int)
     ),
     rep_date_latest as (
         select max(rdate) as rdate from reports where rdate < (select sdate from price_date)
@@ -43,14 +47,15 @@ def get_plus_per_by_date(date):
         from reports where rdate = (select rdate from rep_date)
     ),
     candidates as (
-        select p.code, c.company, p.sdate, max(p.open, p.high, p.low, p.close, ifnull(p.adj_close, 0)) as price, p.calc_market_cap, p.per, p.psr, p.pcr, p.pbr, r.roa, r.gpa, r.debt_to_equity_ratio
+        select p.code, c.company, p.sdate, max(p.open, p.high, p.low, p.close, ifnull(p.adj_close, 0)) as price,
+               p.calc_market_cap, p.per, p.psr, p.pcr, p.pbr, r.roa, r.gpa, r.debt_to_equity_ratio
         from col_prices p
         join reps r on p.code = r.code
         join companies c on p.code = c.code
         where per is not null and per > 0
     )
     select * from candidates
-    """ % date
+    """ % (date, lowest_market_cap_ratio)
 
     # print(type(sql))
     df_candidates = db_oper.select_by_query(sql)
@@ -74,11 +79,10 @@ def set_indicator_ranking(df):
 
 def get_dict_candidates_of_strategies(df):
     # # 그레이엄 마지막 선물 업그레이드 (야는 하위 20%가 아니얌)
-    # graham = df[df['debt_to_equity_ratio'] < 50]
-    # graham = graham[graham['roa'] < 5]
-    # graham = graham[graham['pbr'] >= 0.2]
-    # graham = graham.sort_values(['PBR_Rank']).head(30)
-    # # 하위 20% 제한
+    graham = df[df['debt_to_equity_ratio'] < 50]
+    graham = graham[graham['roa'] < 5]
+    graham = graham[graham['pbr'] >= 0.2]
+    graham = graham.sort_values(['PBR_Rank']).head(30)
 
     # 슈퍼가치전략
     super_values = df.sort_values(['s_value']).head(50)
@@ -86,8 +90,8 @@ def get_dict_candidates_of_strategies(df):
     magic = df.sort_values(['PBRGPA']).head(30)
     # 슈퍼밸류모멘텀
     svm = df.sort_values(['s_v_m']).head(50)
-    # return {'graham': graham, 'super_values': super_values, 'magic': magic, 'svm': svm}
-    return {'super_values': super_values, 'magic': magic, 'svm': svm}
+    return {'graham': graham, 'super_values': super_values, 'magic': magic, 'svm': svm}
+    # return {'super_values': super_values, 'magic': magic, 'svm': svm}
 
 
 def get_earnings_of_date(df, date, seed_money):
@@ -101,12 +105,14 @@ def get_earnings_of_date(df, date, seed_money):
             having count(*) > 1000
         )
         
-        select code, sdate, max(open, high, low, close, ifnull(adj_close, 0)) as price
+        -- select code, sdate, max(open, high, low, close, ifnull(adj_close, 0)) as price
+        select code, sdate, open, high, low, close, adj_close, trading_volume
         from prices
         where sdate = (select sdate from price_date)
             and code in ('%s')
     """ % (date, "','".join(df.code))
     sval_next = db_oper.select_by_query(sql)
+    sval_next['price'] = sval_next.apply(get_price, axis=1)
     # sval_next.head()
 
     sval_rslt = df.merge(sval_next, how='left', on='code', suffixes=['', '_1'])
@@ -119,14 +125,23 @@ def get_earnings_of_date(df, date, seed_money):
     return sval_rslt
 
 
+def get_price(row):
+    if row.open == 0 and row.high == 0 and row.low == 0:
+        return 0
+    if row.trading_volume == 0:
+        return 0
+    return row.close
+
+
 if __name__ == "__main__":
-    start_date = '20200423'
+    start_date = '20200428'
 
     df = get_plus_per_by_date(start_date)
     df = set_indicator_ranking(df)
     strategies = get_dict_candidates_of_strategies(df)
     # print(strategies['svm'])
 
+    strategies['graham'].to_excel(os.path.join('output', 'graham_%s.xlsx' % start_date))
     strategies['svm'].to_excel(os.path.join('output', 'super_value_momentum_%s.xlsx' % start_date))
     strategies['magic'].to_excel(os.path.join('output', 'magic_%s.xlsx' % start_date))
     strategies['super_values'].to_excel(os.path.join('output', 'super_values_%s.xlsx' % start_date))
