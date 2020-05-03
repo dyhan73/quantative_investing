@@ -79,10 +79,10 @@ def set_indicator_ranking(df):
 
 def get_dict_candidates_of_strategies(df):
     # # 그레이엄 마지막 선물 업그레이드 (야는 하위 20%가 아니얌)
-    graham = df[df['debt_to_equity_ratio'] < 50]
-    graham = graham[graham['roa'] < 5]
-    graham = graham[graham['pbr'] >= 0.2]
-    graham = graham.sort_values(['PBR_Rank']).head(30)
+    # graham = df[df['debt_to_equity_ratio'].astype(float) < 50.0]
+    # graham = graham[graham['roa'] < 5]
+    # graham = graham[graham['pbr'] >= 0.2]
+    # graham = graham.sort_values(['PBR_Rank']).head(30)
 
     # 슈퍼가치전략
     super_values = df.sort_values(['s_value']).head(50)
@@ -90,8 +90,8 @@ def get_dict_candidates_of_strategies(df):
     magic = df.sort_values(['PBRGPA']).head(30)
     # 슈퍼밸류모멘텀
     svm = df.sort_values(['s_v_m']).head(50)
-    return {'graham': graham, 'super_values': super_values, 'magic': magic, 'svm': svm}
-    # return {'super_values': super_values, 'magic': magic, 'svm': svm}
+    # return {'graham': graham, 'super_values': super_values, 'magic': magic, 'svm': svm}
+    return {'super_values': super_values, 'magic': magic, 'svm': svm}
 
 
 def get_earnings_of_date(df, date, seed_money):

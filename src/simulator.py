@@ -79,5 +79,5 @@ def rebalance_interval(start, end, duration_days=365, interval_days=30, seed=100
 
 
 if __name__ == "__main__":
-    rebalance_once('20100910', '20200423', int(365 / 1), 10000000, 'graham')
+    rebalance_once('20070710', '20200423', int(365 / 1), 10000000, 'svm')
 
